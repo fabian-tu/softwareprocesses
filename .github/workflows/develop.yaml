@@ -23,4 +23,4 @@ jobs:
         run: docker build -t my-test-image .
 
       - name: Run Docker container
-        run: docker run my-test-image
+        run: docker run hello-world
