@@ -18,12 +18,19 @@ jobs:
 
       - name: Generate PDFs using Pandoc Container
         run: |
-          docker run --rm \
-            -v "$(pwd):/data" \
-            -u $(id -u):$(id -g) \
-            pandoc/extra documentation/*.md --output-dir=documentation
-
-      - name: Check output with ls 
+          # Loop through all markdown files in the documentation folder
+          for f in documentation/*.md; do
+            # Ensure the file exists (prevents errors if the folder is empty)
+            [ -e "$f" ] || continue
+            
+            echo "Converting $f to PDF..."
+            docker run --rm \
+              -v "$(pwd):/data" \
+              -u $(id -u):$(id -g) \
+              pandoc/extra "$f" -o "${f%.md}.pdf"
+          done
+          
+      - name: Check output with ls
         run: |
           echo "Verifying generated files:"
           ls -R documentation/
