@@ -3,7 +3,7 @@ name: CI Develop - Containerized Docs
 on:
   push:
     branches:
-      - 'release/**'
+      - 'main/**'
 
 jobs:
   pipeline:
