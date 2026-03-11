@@ -1,4 +1,4 @@
-name: CI Release
+name: CI Develop - Docs Generation
 
 on:
   push:
@@ -13,11 +13,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Run basic command
-        run: echo "Pipeline is running successfully on release!"
+      - name: Create Documentation Directory
+        run: |
+          mkdir -p documentation
+          echo "# Project Documentation" > documentation/readme.md
+          echo "This was generated on $(date)" >> documentation/readme.md
 
-      - name: Show Docker version
-        run: docker --version
+      - name: Install Pandoc and TeX Live
+        # Note: On self-hosted (Linux), you usually need a PDF engine like pdflatex
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc texlive-latex-base texlive-fonts-recommended
+
+      - name: Generate PDF from Markdown
+        run: |
+          # Convert all .md files in the documentation folder to PDFs
+          for f in documentation/*.md; do
+            pandoc "$f" -o "${f%.md}.pdf"
+          done
+
+      - name: Check output with ls
+        run: |
+          echo "Listing files in documentation directory:"
+          ls -R documentation/
 
       - name: Build Docker image
         run: docker build -t my-test-image .
