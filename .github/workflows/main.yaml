@@ -1,9 +1,9 @@
-name: CI
+name: CI Develop - Containerized Docs
 
 on:
   push:
     branches:
-      - main
+      - 'main/**'
 
 jobs:
   pipeline:
@@ -13,14 +13,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Run basic command
-        run: echo "Pipeline is running successfully!"
+      - name: Create Documentation Directory
+        run: mkdir -p documentation
 
-      - name: Show Docker version
-        run: docker --version
+      - name: Generate PDFs using Pandoc Container
+        run: |
+          docker run --rm \
+            -v "$(pwd):/data" \
+            -u $(id -u):$(id -g) \
+            pandoc/extra documentation/*.md --output-dir=documentation
 
-      - name: Build Docker image
+      - name: Check output with ls
+        run: |
+          echo "Verifying generated files:"
+          ls -R documentation/
+
+      - name: Build App Docker image
         run: docker build -t my-test-image .
 
-      - name: Run Docker container
+      - name: Run App Docker container
         run: docker run my-test-image
