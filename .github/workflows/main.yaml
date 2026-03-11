@@ -23,7 +23,7 @@ jobs:
             -u $(id -u):$(id -g) \
             pandoc/extra documentation/*.md --output-dir=documentation
 
-      - name: Check output with ls
+      - name: Check output with ls 
         run: |
           echo "Verifying generated files:"
           ls -R documentation/
