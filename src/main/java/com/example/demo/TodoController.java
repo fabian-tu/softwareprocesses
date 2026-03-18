@@ -20,6 +20,12 @@ public class TodoController {
     private final List<Todo> todos = new ArrayList<>();
     private final AtomicLong counter = new AtomicLong();
 
+    @GetMapping("/test")
+    public String test() {
+        System.out.print("TESTSESTSTSTT");
+        return "gallo";
+    }
+
     @GetMapping
     public List<Todo> getAllTodos() {
         return todos;
