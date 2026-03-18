@@ -71,4 +71,4 @@ jobs:
           
           echo "Deploying the application on the production server..."
           # Adjust the -p ports (HostPort:ContainerPort) to match your app
-          docker run -d --name team2-image -p 8080:80 10.0.40.169:5000/team2-image:latest
+          docker run -d --name team2-image -p 8082:80 10.0.40.169:5000/team2-image:latest
