@@ -9,7 +9,7 @@ jobs:
   # ==========================================
   # STAGE 1: Docs, Build & Push
   # ==========================================
- build_and_docs:
+  build_and_docs:
     runs-on: build
 
     steps:
