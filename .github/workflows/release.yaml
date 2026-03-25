@@ -74,3 +74,24 @@ jobs:
 
       - name: Push the image to the local registry
         run: docker push 10.0.40.169:5000/team2-image:latest
+
+  # ==========================================
+  # STAGE 2: Deployment
+  # ==========================================
+  deploy:
+    needs: build_and_docs # Waits for docs and build to finish successfully
+    runs-on: deploy # Selects the production runner
+
+    steps:
+      - name: Execute deployment commands
+        run: |
+          echo "Pulling latest image from local registry..."
+          docker pull 10.0.40.169:5000/team2-image:latest
+          
+          echo "Stopping and removing old container (if it exists)..."
+          docker stop team2-image || true
+          docker rm team2-image || true
+          
+          echo "Deploying the application on the production server..."
+          # Adjust the -p ports (HostPort:ContainerPort) to match your app
+          docker run -d --name team2-image -p 8082:8080 10.0.40.169:5000/team2-image:latest
