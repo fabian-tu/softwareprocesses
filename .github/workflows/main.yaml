@@ -9,12 +9,14 @@ jobs:
   # ==========================================
   # STAGE 1: Docs, Build & Push
   # ==========================================
-  build_and_docs:
+build_and_docs:
     runs-on: build
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Keep this so Sonar can assign blame/metrics correctly!
 
       # --- 1. Documentation Steps ---
       - name: Create Documentation Directory
@@ -31,18 +33,39 @@ jobs:
               pandoc/extra "$f" -o "${f%.md}.pdf"
           done
 
-      - name: Check output with ls
-        run: |
-          echo "Verifying generated files:"
-          ls -R documentation/
-
       - name: Save PDFs as GitHub Artifacts (Downloads)
         uses: actions/upload-artifact@v4
         with:
           name: generated-documentation
           path: documentation/*.pdf
 
-      # --- 2. Build & Push Steps ---
+      # --- 2. Compile Java & Generate Reports via Docker ---
+      - name: Build and Test using Dockerized JDK
+        run: |
+          docker run --rm \
+            -v "$(pwd):/app" \
+            -w /app \
+            -u $(id -u):$(id -g) \
+            -e GRADLE_USER_HOME=/app/.gradle \
+            eclipse-temurin:17-jdk \
+            bash -c "chmod +x gradlew && ./gradlew build jacocoTestReport"
+
+      # --- 3. SonarScanner Code Quality Check ---
+      - name: Run SonarScanner CLI via Docker
+        run: |
+          docker run --rm \
+            -e SONAR_HOST_URL="${{ secrets.SONAR_HOST_URL }}" \
+            -e SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}" \
+            -v "$(pwd):/usr/src" \
+            sonarsource/sonar-scanner-cli \
+            -Dsonar.projectKey=team2 \
+            -Dsonar.sources=src/main \
+            -Dsonar.java.libraries=build/libs \
+            -Dsonar.java.binaries=build/classes \
+            -Dsonar.coverage.jacoco.xmlReportPaths=build/reports/jacoco/test/jacocoTestReport.xml \
+            -Dsonar.junit.reportsPath=build/test-results
+
+      # --- 4. Build & Push Steps ---
       - name: Build App Docker image
         run: docker build -t team2-image .
 
@@ -51,24 +74,3 @@ jobs:
 
       - name: Push the image to the local registry
         run: docker push 10.0.40.169:5000/team2-image:latest
-
-  # ==========================================
-  # STAGE 2: Deployment
-  # ==========================================
-  deploy:
-    needs: build_and_docs # Waits for docs and build to finish successfully
-    runs-on: deploy # Selects the production runner
-
-    steps:
-      - name: Execute deployment commands
-        run: |
-          echo "Pulling latest image from local registry..."
-          docker pull 10.0.40.169:5000/team2-image:latest
-          
-          echo "Stopping and removing old container (if it exists)..."
-          docker stop team2-image || true
-          docker rm team2-image || true
-          
-          echo "Deploying the application on the production server..."
-          # Adjust the -p ports (HostPort:ContainerPort) to match your app
-          docker run -d --name team2-image -p 8082:8080 10.0.40.169:5000/team2-image:latest
