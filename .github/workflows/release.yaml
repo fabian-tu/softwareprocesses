@@ -39,18 +39,16 @@ build_and_docs:
           name: generated-documentation
           path: documentation/*.pdf
 
-      # --- 2. Compile Java & Generate Reports ---
-      # This creates the build/classes and build/reports directories Sonar needs
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Build with Gradle and generate Jacoco reports
+      # --- 2. Compile Java & Generate Reports via Docker ---
+      - name: Build and Test using Dockerized JDK
         run: |
-          chmod +x gradlew
-          ./gradlew build jacocoTestReport
+          docker run --rm \
+            -v "$(pwd):/app" \
+            -w /app \
+            -u $(id -u):$(id -g) \
+            -e GRADLE_USER_HOME=/app/.gradle \
+            eclipse-temurin:17-jdk \
+            bash -c "chmod +x gradlew && ./gradlew build jacocoTestReport"
 
       # --- 3. SonarScanner Code Quality Check ---
       - name: Run SonarScanner CLI via Docker
