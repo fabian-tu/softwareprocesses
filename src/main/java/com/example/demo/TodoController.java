@@ -22,8 +22,7 @@ public class TodoController {
 
     @GetMapping("/test")
     public String test() {
-        System.out.print("TESTSESTSTSTT");
-        return "gallo";
+        return "Hallo";
     }
 
     @GetMapping
