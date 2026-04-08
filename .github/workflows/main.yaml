@@ -3,7 +3,7 @@ name: CI Develop - Containerized Docs
 on:
   push:
     branches:
-      - 'main/**'
+      - 'main'
 
 jobs:
   # ==========================================
@@ -14,9 +14,9 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6.0.2
         with:
-          fetch-depth: 0 # Keep this so Sonar can assign blame/metrics correctly!
+          fetch-depth: 0
 
       # --- 1. Documentation Steps ---
       - name: Create Documentation Directory
